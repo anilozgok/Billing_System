@@ -1,8 +1,6 @@
 package com.anilcan.billing_system.model.entity;
 
-import lombok.Builder;
 
-@Builder
 public record Bill(
         Long billNo,
         String firstName,
