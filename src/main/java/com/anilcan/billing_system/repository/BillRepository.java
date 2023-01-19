@@ -5,10 +5,12 @@ import com.anilcan.billing_system.model.response.BillResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface BillRepository  extends JpaRepository<Bill, Long> {
 
-    BillResponse getAcceptedBills();
+    List<Bill> getAcceptedBills();
 
-    BillResponse getRejectedBills();
+    List<Bill> getRejectedBills();
 }
