@@ -25,5 +25,4 @@ public class Bill {
     private double amount;
     private String productName;
     private boolean billStatus;
-    private boolean shipment;
 }
