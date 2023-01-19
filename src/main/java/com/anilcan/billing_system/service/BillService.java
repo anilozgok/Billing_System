@@ -19,12 +19,23 @@ public class BillService {
     }
 
     @Value("${BillingSystem.totalBillLimit}")
-    private int limit;
+    private double limit;
 
-    public Bill saveBill(NewBillRequest newBillRequest){
-        Boolean billStatus=true;
+    public Bill saveBill(NewBillRequest newBillRequest) {
 
-        Bill bill=new Bill(
+        /*
+         * get sum of bills for the specialist
+         * firstName, lastName, email
+         * select sum(amount) from Bill where firstName=firstName, lastName=lastName, email=email => named query atılabilir
+         *
+         * check if result of the query above exceeds limit if exceeds billStatus must be false otherwise it's must be true
+         * */
+
+        double sumOfBills = billRepository.getSumOfBills(newBillRequest.getFirstName(), newBillRequest.getLastName(), newBillRequest.getEmail());
+
+        Boolean billStatus = (limit > sumOfBills) ? true : false;
+
+        Bill bill = new Bill(
                 newBillRequest.getBillNo(),
                 newBillRequest.getFirstName(),
                 newBillRequest.getLastName(),
@@ -32,7 +43,7 @@ public class BillService {
                 newBillRequest.getAmount(),
                 newBillRequest.getProductName(),
                 billStatus
-                );
+        );
 
         return billRepository.save(bill);
     }

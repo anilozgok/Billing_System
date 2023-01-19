@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NamedQuery(name = "Bill.getRejectedBill", query = "SELECT b FROM Bill b where b.billStatus=false")
 @NamedQuery(name = "Bill.getAcceptedBill", query = "SELECT b FROM Bill b where b.billStatus=true")
+@NamedQuery(name = "Bill.getSumOfBills", query = "SELECT SUM(b.amount) FROM Bill b where b.firstName=:firstName AND b.lastName=:lastName AND b.email= :email")
 public class Bill {
 
     @Id

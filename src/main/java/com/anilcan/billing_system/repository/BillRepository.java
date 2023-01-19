@@ -8,9 +8,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BillRepository  extends JpaRepository<Bill, Long> {
+public interface BillRepository extends JpaRepository<Bill, Long> {
 
     List<Bill> getAcceptedBills();
 
     List<Bill> getRejectedBills();
+
+    double getSumOfBills(String firstName, String lastName, String amount);
 }
