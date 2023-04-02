@@ -1,29 +1,43 @@
 package com.anilcan.billing_system.model.entity;
 
+import com.anilcan.billing_system.enums.BillStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@Table(name = "Bill")
+
+@Getter
+@Setter
 @Entity
-@NamedQuery(name = "Bill.getRejectedBill", query = "SELECT b FROM Bill b where b.billStatus=false")
-@NamedQuery(name = "Bill.getAcceptedBill", query = "SELECT b FROM Bill b where b.billStatus=true")
-@NamedQuery(name = "Bill.getSumOfBills", query = "SELECT SUM(b.amount) FROM Bill b where b.firstName=:firstName AND b.lastName=:lastName AND b.email= :email")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "Bill")
 public class Bill {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long billNo;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String billNo;
+
+    @Column(nullable = false)
     private String firstName;
+
+    @Column(nullable = false)
     private String lastName;
+
+    @Column(nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private double amount;
+
+    @Column(nullable = false)
     private String productName;
-    private boolean billStatus;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private BillStatus billStatus;
+
 }

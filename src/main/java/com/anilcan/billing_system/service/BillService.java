@@ -1,81 +1,111 @@
 package com.anilcan.billing_system.service;
 
-import com.anilcan.billing_system.controller.BillController;
+import com.anilcan.billing_system.enums.BillStatus;
 import com.anilcan.billing_system.exception.BillNotFoundException;
-import com.anilcan.billing_system.exception.BillRejectedException;
+import com.anilcan.billing_system.exception.InvalidBillNoException;
+import com.anilcan.billing_system.exception.LimitExceededException;
+import com.anilcan.billing_system.model.domain.BillDomain;
+import com.anilcan.billing_system.model.dto.BillDTO;
 import com.anilcan.billing_system.model.entity.Bill;
-import com.anilcan.billing_system.model.request.NewBillRequest;
-import com.anilcan.billing_system.model.response.BillResponse;
 import com.anilcan.billing_system.repository.BillRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class BillService {
 
-    private final Logger logger = LoggerFactory.getLogger(BillService.class);
-    private BillRepository billRepository;
+    private final BillRepository billRepository;
 
-    public BillService(BillRepository billRepository) {
-        this.billRepository = billRepository;
+    @Value("${billing-system.limit}")
+    private final double limit;
+
+    public BillDTO saveBill(BillDTO bill) {
+        log.info("BS - processing NewBillRequest.");
+        var billStatus = BillStatus.ACCEPTED;
+
+        if (!bill.info().billNo().startsWith("TR") || !bill.info().billNo().startsWith("tr")) throw new InvalidBillNoException();
+
+        var totalAmount = billRepository.findBillByFirstNameAndLastNameAndEmail(bill.info().firstName(),
+                                                                                bill.info().lastName(),
+                                                                                bill.info().email())
+                                        .stream()
+                                        .map(Bill::getAmount)
+                                        .reduce(0.0, Double::sum);
+
+        if (totalAmount >= limit) {
+            billStatus = BillStatus.REJECTED;
+            throw new LimitExceededException();
+        }
+
+        var savedBill = billRepository.save(Bill.builder()
+                                                .billNo(bill.info().billNo())
+                                                .firstName(bill.info().firstName())
+                                                .lastName(bill.info().lastName())
+                                                .email(bill.info().email())
+                                                .amount(bill.info().amount())
+                                                .productName(bill.info().productName())
+                                                .billStatus(billStatus)
+                                                .build());
+
+        return new BillDTO(new BillDomain(savedBill.getBillNo(),
+                                          savedBill.getFirstName(),
+                                          savedBill.getLastName(),
+                                          savedBill.getEmail(),
+                                          savedBill.getAmount(),
+                                          savedBill.getProductName()), savedBill.getBillStatus());
     }
 
-    @Value("${BillingSystem.totalBillLimit}")
-    private double limit;
 
-    public Bill saveBill(NewBillRequest newBillRequest) throws BillRejectedException {
-        logger.info("BS - processing request. NewBillRequest: " + newBillRequest);
+    public BillDTO getBill(String billNo) {
+        log.info("BS - processing getBill service.");
 
-        double sumOfBills = billRepository.getSumOfBills(newBillRequest.getFirstName(), newBillRequest.getLastName(), newBillRequest.getEmail());
+        if (!billNo.startsWith("TR") || !billNo.startsWith("tr")) throw new InvalidBillNoException();
 
-        Boolean billStatus = (limit > sumOfBills) ? true : false;
+        var bill = billRepository.findBillByBillNo(billNo).orElseThrow(BillNotFoundException::new);
 
-        Bill bill = billRepository.save(new Bill(
-                newBillRequest.getBillNo(),
-                newBillRequest.getFirstName(),
-                newBillRequest.getLastName(),
-                newBillRequest.getEmail(),
-                newBillRequest.getAmount(),
-                newBillRequest.getProductName(),
-                billStatus
-        ));
-
-        if (!billStatus)
-            throw new BillRejectedException(bill.getBillNo());
-
-        return bill;
-
+        return new BillDTO(new BillDomain(bill.getBillNo(),
+                                          bill.getFirstName(),
+                                          bill.getLastName(),
+                                          bill.getEmail(),
+                                          bill.getAmount(),
+                                          bill.getProductName()), bill.getBillStatus());
     }
 
-    public Bill getBill(Long billNo) throws BillNotFoundException {
-        logger.info("BS - processing getBill service.");
-        Bill bill = billRepository.getReferenceById(billNo);
+    public List<BillDTO> getAcceptedBills() {
+        log.info("BS - processing getAcceptedBills service.");
 
-        if (bill == null)
-            throw new BillRejectedException(billNo);
+        var bills = billRepository.findBillByBillStatus(BillStatus.ACCEPTED);
 
-        return bill;
+        return bills.stream()
+                    .map(bill -> new BillDTO(new BillDomain(bill.getBillNo(),
+                                                            bill.getFirstName(),
+                                                            bill.getLastName(),
+                                                            bill.getEmail(),
+                                                            bill.getAmount(),
+                                                            bill.getProductName()), bill.getBillStatus()))
+                    .collect(Collectors.toList());
     }
 
-    public List<Bill> getAcceptedBills() throws BillNotFoundException {
-        logger.info("BS - processing getAcceptedBills service.");
-        List<Bill> bills = billRepository.getAcceptedBills();
-        if (bills.size() == 0)
-            throw new BillNotFoundException("There are no accepted bills on the system.");
-        return bills;
-    }
+    public List<BillDTO> getRejectedBills() {
+        log.info("BS - processing getRejectedBills service.");
 
-    public List<Bill> getRejectedBills() {
-        logger.info("BS - processing getRejectedBills service.");
-        List<Bill> bills = billRepository.getRejectedBills();
-        if (bills.size() == 0)
-            throw new BillNotFoundException("There are no rejected bills on the system.");
-        return bills;
+        var bills = billRepository.findBillByBillStatus(BillStatus.REJECTED);
 
+        return bills.stream()
+                    .map(bill -> new BillDTO(new BillDomain(bill.getBillNo(),
+                                                            bill.getFirstName(),
+                                                            bill.getLastName(),
+                                                            bill.getEmail(),
+                                                            bill.getAmount(),
+                                                            bill.getProductName()), bill.getBillStatus()))
+                    .collect(Collectors.toList());
     }
 
 }
