@@ -1,0 +1,28 @@
+version: '3.1'
+
+services:
+  app:
+    container_name: billing
+    build: ./
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgresql
+    networks:
+      - billing-system
+    environment:
+      - spring.datasource.url=jdbc:postgresql://postgresql/BillingDB
+  postgresql:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_USER=test
+      - POSTGRES_DB=BillingDB
+    networks:
+      - billing-system
+
+networks:
+  billing-system:
+    driver: bridge

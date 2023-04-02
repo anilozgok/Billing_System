@@ -2,7 +2,8 @@
 	"info": {
 		"_postman_id": "49c85568-0af2-4622-83ca-312e3ac140db",
 		"name": "Billing_System_Api_Requests",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19541300"
 	},
 	"item": [
 		{
@@ -14,16 +15,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/api/bill/get/5",
+							"raw": "{{base_url}}/get/TR5500",
 							"host": [
-								"localhost"
+								"{{base_url}}"
 							],
-							"port": "8080",
 							"path": [
-								"api",
-								"bill",
 								"get",
-								"5"
+								"TR5500"
 							]
 						}
 					},
@@ -35,15 +33,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/api/bill/accepted",
+							"raw": "{{base_url}}/get-accepted",
 							"host": [
-								"localhost"
+								"{{base_url}}"
 							],
-							"port": "8080",
 							"path": [
-								"api",
-								"bill",
-								"accepted"
+								"get-accepted"
 							]
 						}
 					},
@@ -55,15 +50,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/api/bill/rejected",
+							"raw": "{{base_url}}/get-rejected",
 							"host": [
-								"localhost"
+								"{{base_url}}"
 							],
-							"port": "8080",
 							"path": [
-								"api",
-								"bill",
-								"rejected"
+								"get-rejected"
 							]
 						}
 					},
@@ -75,13 +67,13 @@
 			"name": "POST Requests",
 			"item": [
 				{
-					"name": "POST request to add new Bill to the system",
+					"name": "POST request to save bill",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"billNo\": 123,\r\n    \"firstName\": \"PS\",\r\n    \"lastName\": \"1\",\r\n    \"email\": \"ps_1@mail.com\",\r\n    \"amount\": 125.50,\r\n    \"productName\": \"PS-1 purchase\"\r\n}",
+							"raw": "{\r\n    \"bill\": {\r\n        \"billNo\": \"TR5500\",\r\n        \"firstName\": \"Anıl Can\",\r\n        \"lastName\": \"Özgök\",\r\n        \"email\": \"anil@mail.com\",\r\n        \"amount\": 1500,\r\n        \"productName\": \"product1\"\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -89,14 +81,11 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8080/api/bill/save",
+							"raw": "{{base_url}}/save",
 							"host": [
-								"localhost"
+								"{{base_url}}"
 							],
-							"port": "8080",
 							"path": [
-								"api",
-								"bill",
 								"save"
 							]
 						}
@@ -104,6 +93,12 @@
 					"response": []
 				}
 			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api/bill"
 		}
 	]
 }
