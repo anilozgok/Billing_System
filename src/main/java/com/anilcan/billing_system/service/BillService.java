@@ -24,35 +24,34 @@ public class BillService {
     private final BillRepository billRepository;
 
     @Value("${billing-system.limit}")
-    private final double limit;
+    private double limit;
 
-    public BillDTO saveBill(BillDTO bill) {
+    public BillDTO saveBill(BillDomain bill) {
         log.info("BS - processing NewBillRequest.");
-        var billStatus = BillStatus.ACCEPTED;
 
-        if (!bill.info().billNo().startsWith("TR") || !bill.info().billNo().startsWith("tr")) throw new InvalidBillNoException();
+        var billNoUpperCase = bill.billNo().toUpperCase();
 
-        var totalAmount = billRepository.findBillByFirstNameAndLastNameAndEmail(bill.info().firstName(),
-                                                                                bill.info().lastName(),
-                                                                                bill.info().email())
-                                        .stream()
-                                        .map(Bill::getAmount)
-                                        .reduce(0.0, Double::sum);
+        if (!billNoUpperCase.startsWith("TR")) throw new InvalidBillNoException();
 
-        if (totalAmount >= limit) {
-            billStatus = BillStatus.REJECTED;
-            throw new LimitExceededException();
-        }
+        double remainingLimit = limit - billRepository.findBillByFirstNameAndLastNameAndEmail(bill.firstName(),
+                                                                                              bill.lastName(),
+                                                                                              bill.email())
+                                                      .stream()
+                                                      .map(Bill::getAmount)
+                                                      .reduce(0.0, Double::sum);
 
         var savedBill = billRepository.save(Bill.builder()
-                                                .billNo(bill.info().billNo())
-                                                .firstName(bill.info().firstName())
-                                                .lastName(bill.info().lastName())
-                                                .email(bill.info().email())
-                                                .amount(bill.info().amount())
-                                                .productName(bill.info().productName())
-                                                .billStatus(billStatus)
+                                                .billNo(billNoUpperCase)
+                                                .firstName(bill.firstName())
+                                                .lastName(bill.lastName())
+                                                .email(bill.email())
+                                                .amount(bill.amount())
+                                                .productName(bill.productName())
+                                                .billStatus(bill.amount() > remainingLimit ? BillStatus.REJECTED : BillStatus.ACCEPTED)
                                                 .build());
+
+
+        if (bill.amount() > remainingLimit) throw new LimitExceededException();
 
         return new BillDTO(new BillDomain(savedBill.getBillNo(),
                                           savedBill.getFirstName(),
@@ -62,11 +61,12 @@ public class BillService {
                                           savedBill.getProductName()), savedBill.getBillStatus());
     }
 
-
     public BillDTO getBill(String billNo) {
         log.info("BS - processing getBill service.");
 
-        if (!billNo.startsWith("TR") || !billNo.startsWith("tr")) throw new InvalidBillNoException();
+        var billNoUpperCase = billNo.toUpperCase();
+
+        if (!billNoUpperCase.startsWith("TR")) throw new InvalidBillNoException();
 
         var bill = billRepository.findBillByBillNo(billNo).orElseThrow(BillNotFoundException::new);
 

@@ -1,7 +1,7 @@
 package com.anilcan.billing_system.model.request;
 
-import com.anilcan.billing_system.model.dto.BillDTO;
+import com.anilcan.billing_system.model.domain.BillDomain;
 
-public record NewBillRequest(BillDTO bill) {
+public record NewBillRequest(BillDomain bill) {
 
 }
